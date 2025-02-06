@@ -1,7 +1,8 @@
 # relationship of plasma and freqeuncy
 import numpy as np
 import torch
-from sunRay.parameters import dev_u,const_c
+
+dev_u = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 @torch.enable_grad()

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "physynthtrainer"
+version = "0.1.0"
+description = "Physics-informed synthetic data training for event detection in solar radio bursts"
+readme = "README.md"
+authors = [{ name = "Peijin Zhang", email = "pz47@njit.edu" }]
+license = { text = "MIT" }
+dependencies = [
+    "numpy",
+    "scipy",
+    "torch",
+    "torchvision",
+    "matplotlib",
+    "opencv-python",
+    "tqdm",
+    "h5py",
+    "pyyaml",
+    "pandas"
+]
+requires-python = ">=3.8"
+
+[project.urls]
+Homepage = "https://github.com/peijin94/PhySynthTrainer"
+Repository = "https://github.com/peijin94/PhySynthTrainer"
+Issues = "https://github.com/peijin94/PhySynthTrainer/issues"
+
+[tool.setuptools]
+packages = ["physynthtrainer"]
+
+[tool.setuptools.package-data]
+"physynthtrainer" = ["*.yaml", "*.h5", "*.json"]
