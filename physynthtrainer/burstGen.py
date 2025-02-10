@@ -1,3 +1,20 @@
+import numpy as np
+import torch
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors 
+from physynthtrainer import densityModel, plasmaFreq, freqDrift
+import numpy as np
+from scipy.interpolate import RectBivariateSpline
+import matplotlib.pyplot as plt
+
+from PIL import Image
+
+
 def generate_quasi_periodic_signal(t_arr, base_freq=1.0, num_harmonics=5, 
                                  noise_level=0.1, freqvar=0.3):
     """
@@ -245,5 +262,5 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
 
     return img_bursts_collect, bursts, is_t3b
 
-img_bursts, bursts, is_t3b = generate_random_bursts(n_bursts=40)
+#img_bursts, bursts, is_t3b = generate_random_bursts(n_bursts=40)
 
