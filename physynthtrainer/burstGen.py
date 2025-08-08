@@ -61,7 +61,7 @@ def generate_quasi_periodic_signal(t_arr, base_freq=1.0, num_harmonics=5,
     return signal
 
 
-def create_radio_burst_hash_table(freq_range=[30, 85], N_freq=640, v_range=[0.05, 0.5], N_v=200):
+def create_radio_burst_hash_table(freq_range=[30, 85], N_freq=640, v_range=[0.05, 0.5], N_v=200, t0_burst=80.0):
     """
     Generate lookup table for time offset of a type III radio burst
     """
@@ -191,12 +191,16 @@ def generate_type_iii_burst(freq_range=[30, 85], t_res=0.5, t_start=0.0, N_freq=
 import numpy as np
 from typing import List, Tuple
 
+
 def generate_many_random_t3_bursts(n_bursts: int = 100,
                          freq_range: List[float] = [30, 85],
                          t_res: float = 0.5,
                          t_start: float = 0.0,
                          N_freq: int = 640,
-                         N_time: int = 640) -> List[Tuple]:
+                         N_time: int = 640,
+                         use_hash_table: bool = False,
+                         hash_table: np.ndarray = None,
+                         v_hash: np.ndarray = None) -> List[Tuple]:
     """
     Generate multiple Type III radio bursts with random parameters.
     
@@ -222,7 +226,7 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
 
 
         # Using inverse transform sampling: x = (1 - u)^(-1/(alpha-1)) where u is uniform random
-        alpha = 2.5  # power law exponent, higher value means stronger events are rarer
+        alpha = 2  # power law exponent, higher value means stronger events are rarer
         u = np.random.uniform(0, 1)
         Burst_intensity = 0.1 + 0.9 * ((1 - u) ** (-1/(alpha-1)))
         # Clip to ensure we stay in [0.1, 1] range
@@ -252,7 +256,9 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
             burstending_freq=burstending_freq,
             edge_freq_ratio=edge_freq_ratio,
             fine_structure=fine_structure,
-            use_hash_table=True, hash_table=t_burst_hash, v_hash=v_ax
+            use_hash_table=use_hash_table,
+            hash_table=hash_table,
+            v_hash=v_hash
         )
         
         if np.max(img_bursts) > 0.001:    
@@ -263,4 +269,32 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
     return img_bursts_collect, bursts, is_t3b
 
 #img_bursts, bursts, is_t3b = generate_random_bursts(n_bursts=40)
+
+
+
+
+
+def added_noise(t_ax, f_ax, noise_level=0.2, noise_size=[32,8]):
+    """
+    Add radio background noise to the image.
+    """
+
+    original = np.random.uniform(0.1,0.3, size=noise_size)
+    x = np.linspace(0, 1, noise_size[0])
+    y = np.linspace(0, 1, noise_size[1])
+
+    x_N = t_ax.shape[0]
+    y_N = f_ax.shape[0]
+    x_new = np.linspace(0, 1, x_N)
+    y_new = np.linspace(0, 1, y_N)
+
+    f = RectBivariateSpline(x, y, original)
+    interpolated = f(x_new, y_new)
+    # normalize to 0-0.05
+    interpolated_norm = (interpolated - np.min(interpolated)) / (np.max(interpolated) - np.min(interpolated)) * noise_level
+
+    return interpolated_norm
+
+
+
 
