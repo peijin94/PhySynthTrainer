@@ -17,26 +17,21 @@ from PIL import Image
 
 def generate_quasi_periodic_signal(t_arr, base_freq=1.0, num_harmonics=5, 
                                  noise_level=0.1, freqvar=0.3):
-    """
-    Generate a quasi-periodic signal for given time points.
-    
-    Parameters:
-    -----------
-    t_arr : array-like
-        Array of time points
-    base_freq : float
-        Base frequency of the signal in Hz
-    num_harmonics : int
-        Number of harmonic components to include
-    noise_level : float
-        Amplitude of random noise (0 to 1)
-    freqvar : float
-        Amount of random frequency variation (0 to 1)
-        
+    """Generate a quasi-periodic signal for given time points.
+
+    Args:
+        t_arr (array-like): Array of time points
+        base_freq (float, optional): Base frequency of the signal in Hz. 
+            Defaults to 1.0.
+        num_harmonics (int, optional): Number of harmonic components to include. 
+            Defaults to 5.
+        noise_level (float, optional): Amplitude of random noise (0 to 1). 
+            Defaults to 0.1.
+        freqvar (float, optional): Amount of random frequency variation (0 to 1). 
+            Defaults to 0.3.
+
     Returns:
-    --------
-    array
-        Signal values corresponding to input time points
+        array: Signal values corresponding to input time points
     """
     # Convert input to numpy array
     t = np.array(t_arr)
@@ -62,8 +57,22 @@ def generate_quasi_periodic_signal(t_arr, base_freq=1.0, num_harmonics=5,
 
 
 def create_radio_burst_hash_table(freq_range=[30, 85], N_freq=640, v_range=[0.05, 0.5], N_v=200, t0_burst=80.0):
-    """
-    Generate lookup table for time offset of a type III radio burst
+    """Generate lookup table for time offset of a type III radio burst.
+
+    Args:
+        freq_range (list, optional): [min_freq, max_freq] in MHz. 
+            Defaults to [30, 85].
+        N_freq (int, optional): Number of frequency channels. 
+            Defaults to 640.
+        v_range (list, optional): [min_v, max_v] in units of c. 
+            Defaults to [0.05, 0.5].
+        N_v (int, optional): Number of velocity steps. 
+            Defaults to 200.
+        t0_burst (float, optional): Burst start time in seconds. 
+            Defaults to 80.0.
+
+    Returns:
+        tuple: (t_burst_collect, f_ax, v_ax) - The burst time offset table and its axes
     """
     f_ax = np.linspace(freq_range[0], freq_range[1], N_freq)
     v_ax = np.linspace(v_range[0], v_range[1], N_v)
@@ -80,26 +89,17 @@ def create_radio_burst_hash_table(freq_range=[30, 85], N_freq=640, v_range=[0.05
 
 
 def biGaussian(x, x0, tau1, tau2, A0):
-    """
-    Calculate a bi-gaussian function.
+    """Calculate a bi-gaussian function.
 
-    Parameters:
-    ----------
-    x : array-like
-        Input array
-    x0 : float
-        Center of the gaussian
-    tau1 : float
-        Decay time for the first gaussian
-    tau2 : float
-        Decay time for the second gaussian
-    A0 : float
-        Amplitude of the gaussian
+    Args:
+        x (array-like): Input array
+        x0 (float): Center of the gaussian
+        tau1 (float): Decay time for the first gaussian
+        tau2 (float): Decay time for the second gaussian
+        A0 (float): Amplitude of the gaussian
 
     Returns:
-    --------
-    array
-        The calculated bi-gaussian function
+        array: The calculated bi-gaussian function
     """
     return A0 * (np.exp(-(x-x0)**2/2/tau1**2) * (np.sign(x-x0)+1)/2 + np.exp(-(x-x0)**2/2/tau2**2) * (np.sign(x0-x)+1)/2)
 
@@ -109,26 +109,44 @@ def generate_type_iii_burst(freq_range=[30, 85], t_res=0.5, t_start=0.0, N_freq=
                            Burst_intensity=1.0, burststarting_freq=40.0,
                            burstending_freq=60.0, edge_freq_ratio=0.01,
                            fine_structure=True, use_hash_table=False, hash_table=None, v_hash=None):
-    """
-    Generate a Type III solar radio burst image.
-    
-    Parameters:
-        freq_range (list): [min_freq, max_freq] in MHz
-        t_res (float): Time resolution in seconds
-        t_start (float): Start time in seconds
-        N_freq (int): Number of frequency channels
-        N_time (int): Number of time steps
-        v_beam (float): Beam velocity in units of c
-        t0_burst (float): Burst start time in seconds
-        decay_t_dur_100Mhz (float): Decay time duration at 100 MHz
-        Burst_intensity (float): Peak intensity of the burst
-        burststarting_freq (float): Starting frequency in MHz
-        burstending_freq (float): Ending frequency in MHz
-        edge_freq (float): Edge smoothing frequency in MHz
-        fine_structure (bool): Whether to add fine structure
-        
+    """Generate a Type III solar radio burst image.
+
+    Args:
+        freq_range (list, optional): [min_freq, max_freq] in MHz. 
+            Defaults to [30, 85].
+        t_res (float, optional): Time resolution in seconds. 
+            Defaults to 0.5.
+        t_start (float, optional): Start time in seconds. 
+            Defaults to 0.0.
+        N_freq (int, optional): Number of frequency channels. 
+            Defaults to 640.
+        N_time (int, optional): Number of time steps. 
+            Defaults to 640.
+        v_beam (float, optional): Beam velocity in units of c. 
+            Defaults to 0.15.
+        t0_burst (float, optional): Burst start time in seconds. 
+            Defaults to 80.0.
+        decay_t_dur_100Mhz (float, optional): Decay time duration at 100 MHz. 
+            Defaults to 1.0.
+        Burst_intensity (float, optional): Peak intensity of the burst. 
+            Defaults to 1.0.
+        burststarting_freq (float, optional): Starting frequency in MHz. 
+            Defaults to 40.0.
+        burstending_freq (float, optional): Ending frequency in MHz. 
+            Defaults to 60.0.
+        edge_freq_ratio (float, optional): Edge smoothing frequency ratio. 
+            Defaults to 0.01.
+        fine_structure (bool, optional): Whether to add fine structure. 
+            Defaults to True.
+        use_hash_table (bool, optional): Whether to use a hash table for burst generation. 
+            Defaults to False.
+        hash_table (array, optional): The hash table to use for burst generation. 
+            Defaults to None.
+        v_hash (array, optional): The velocity hash to use for burst generation. 
+            Defaults to None.
+
     Returns:
-        tuple: (img_bursts, t_ax, f_ax) - The burst image and its axes
+        tuple: (img_bursts, mask, bbox) - The burst image, its mask and bounding box
     """
     # Initialize arrays
     img_bursts = np.zeros((N_time, N_freq))
@@ -222,34 +240,30 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
                          use_hash_table: bool = False,
                          hash_table: np.ndarray = None,
                          v_hash: np.ndarray = None) -> List[Tuple]:
-    """
-    Generate multiple Type III radio bursts with random parameters.
-    
-    Parameters:
-    -----------
-    n_bursts : int
-        Number of bursts to generate
-    freq_range : list
-        [min_freq, max_freq] in MHz
-    t_res : float
-        Time resolution in seconds
-    t_start : float
-        Start time in seconds
-    N_freq : int
-        Number of frequency channels
-    N_time : int
-        Number of time steps
-    use_hash_table : bool
-        Whether to use a hash table for burst generation
-    hash_table : array
-        The hash table to use for burst generation
-    v_hash : array
-        The velocity hash to use for burst generation
-    
+    """Generate multiple Type III radio bursts with random parameters.
+
+    Args:
+        n_bursts (int, optional): Number of bursts to generate. 
+            Defaults to 100.
+        freq_range (List[float], optional): [min_freq, max_freq] in MHz. 
+            Defaults to [30, 85].
+        t_res (float, optional): Time resolution in seconds. 
+            Defaults to 0.5.
+        t_start (float, optional): Start time in seconds. 
+            Defaults to 0.0.
+        N_freq (int, optional): Number of frequency channels. 
+            Defaults to 640.
+        N_time (int, optional): Number of time steps. 
+            Defaults to 640.
+        use_hash_table (bool, optional): Whether to use a hash table for burst generation. 
+            Defaults to False.
+        hash_table (np.ndarray, optional): The hash table to use for burst generation. 
+            Defaults to None.
+        v_hash (np.ndarray, optional): The velocity hash to use for burst generation. 
+            Defaults to None.
+
     Returns:
-    --------
-    tuple
-        A tuple containing the generated bursts, their bounding boxes, and whether they are type 3b bursts
+        List[Tuple]: A list of tuples containing the generated bursts, their bounding boxes, and whether they are type 3b bursts
     """
     bursts = []
     is_t3b = []
@@ -311,24 +325,18 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
 
 
 def added_noise(t_ax, f_ax, noise_level=0.2, noise_size=[32,8]):
-    """
-    Add radio background noise to the image.
+    """Add radio background noise to the image.
 
-    Parameters:
-    -----------
-    t_ax : array-like
-        Time axis of the image
-    f_ax : array-like
-        Frequency axis of the image
-    noise_level : float
-        The level of noise to add
-    noise_size : list
-        The size of the noise to generate
+    Args:
+        t_ax (array-like): Time axis of the image
+        f_ax (array-like): Frequency axis of the image
+        noise_level (float, optional): The level of noise to add. 
+            Defaults to 0.2.
+        noise_size (list, optional): The size of the noise to generate. 
+            Defaults to [32,8].
 
     Returns:
-    --------
-    array
-        The interpolated noise
+        array: The interpolated noise
     """
 
     original = np.random.uniform(0.1,0.3, size=noise_size)
