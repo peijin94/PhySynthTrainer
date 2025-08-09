@@ -80,6 +80,27 @@ def create_radio_burst_hash_table(freq_range=[30, 85], N_freq=640, v_range=[0.05
 
 
 def biGaussian(x, x0, tau1, tau2, A0):
+    """
+    Calculate a bi-gaussian function.
+
+    Parameters:
+    ----------
+    x : array-like
+        Input array
+    x0 : float
+        Center of the gaussian
+    tau1 : float
+        Decay time for the first gaussian
+    tau2 : float
+        Decay time for the second gaussian
+    A0 : float
+        Amplitude of the gaussian
+
+    Returns:
+    --------
+    array
+        The calculated bi-gaussian function
+    """
     return A0 * (np.exp(-(x-x0)**2/2/tau1**2) * (np.sign(x-x0)+1)/2 + np.exp(-(x-x0)**2/2/tau2**2) * (np.sign(x0-x)+1)/2)
 
 
@@ -205,15 +226,30 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
     Generate multiple Type III radio bursts with random parameters.
     
     Parameters:
-        n_bursts: Number of bursts to generate
-        freq_range: [min_freq, max_freq] in MHz
-        t_res: Time resolution in seconds
-        t_start: Start time in seconds
-        N_freq: Number of frequency channels
-        N_time: Number of time steps
+    -----------
+    n_bursts : int
+        Number of bursts to generate
+    freq_range : list
+        [min_freq, max_freq] in MHz
+    t_res : float
+        Time resolution in seconds
+    t_start : float
+        Start time in seconds
+    N_freq : int
+        Number of frequency channels
+    N_time : int
+        Number of time steps
+    use_hash_table : bool
+        Whether to use a hash table for burst generation
+    hash_table : array
+        The hash table to use for burst generation
+    v_hash : array
+        The velocity hash to use for burst generation
     
     Returns:
-        List of tuples (img_bursts, mask, bbox) for each burst
+    --------
+    tuple
+        A tuple containing the generated bursts, their bounding boxes, and whether they are type 3b bursts
     """
     bursts = []
     is_t3b = []
@@ -277,6 +313,22 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
 def added_noise(t_ax, f_ax, noise_level=0.2, noise_size=[32,8]):
     """
     Add radio background noise to the image.
+
+    Parameters:
+    -----------
+    t_ax : array-like
+        Time axis of the image
+    f_ax : array-like
+        Frequency axis of the image
+    noise_level : float
+        The level of noise to add
+    noise_size : list
+        The size of the noise to generate
+
+    Returns:
+    --------
+    array
+        The interpolated noise
     """
 
     original = np.random.uniform(0.1,0.3, size=noise_size)

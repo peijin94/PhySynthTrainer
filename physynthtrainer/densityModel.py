@@ -46,6 +46,19 @@ def f_Ne(N_e):
 
 @torch.enable_grad()
 def Ne_f(f):
+    """
+    Electron density from plasma frequency.
+
+    Parameters:
+    -----------
+    f : torch.Tensor
+        The plasma frequency in Hz.
+
+    Returns:
+    --------
+    torch.Tensor
+        The electron density in cm^-3.
+    """
     # in cm-3
     return (f/8.93e3)**2.0
 

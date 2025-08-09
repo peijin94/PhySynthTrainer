@@ -80,6 +80,25 @@ def freq_drift_f_t(t,v,t0,dm = parkerfit ):
 
 
 def freq_drift_t_f(f,v,t0,dm = parkerfit):
+    """
+    Calculates the time drift of a type III burst.
+
+    Parameters:
+    -----------
+    f : float
+        The frequency in MHz.
+    v : float
+        The velocity of the electron beam in units of c.
+    t0 : float
+        The start time of the burst at 300 MHz.
+    dm : function
+        The density model to use.
+
+    Returns:
+    --------
+    float
+        The time in seconds.
+    """
     # t0 is the time at 300MHz
     # t [s]
     # f [MHz]

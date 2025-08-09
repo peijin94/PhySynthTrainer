@@ -44,6 +44,23 @@ def domega_dxyz_vec(ne_r_vec,r_vec,dev_u=dev_u):
 
 @torch.enable_grad()
 def dNe_dxyz(ne_r,r_vec,dev_u=dev_u):
+    """
+    Calculates the gradient of the electron density with respect to x, y, and z.
+
+    Parameters:
+    -----------
+    ne_r : function
+        A function that returns the electron density at a given radius.
+    r_vec : torch.Tensor
+        The radius vector in solar radii.
+    dev_u : torch.device
+        The device to use for calculations.
+
+    Returns:
+    --------
+    torch.Tensor
+        The gradient of the electron density.
+    """
     # differential of omegape
     r_vec.requires_grad_(True)
     rr = torch.sqrt(torch.sum(r_vec.pow(2),axis=0))
