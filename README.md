@@ -11,6 +11,9 @@ PhySynthTrainer is a Python library for generating synthetic type III solar radi
 - **Multiple Density Models:** Supports various solar corona density models including Saito, Leblanc, Parker, and Newkirk.
 - **Bounding Box Generation:** Automatically generates bounding boxes for the bursts, suitable for training object detection models.
 - **Background Noise:** Ability to add background noise to the synthetic data to create more realistic training samples.
+- **Configuration Management:** Save and load burst generation parameters in YAML format for reproducible experiments.
+- **YOLO Label Export:** Export bounding box annotations in YOLO format for training object detection models.
+- **Visualization:** Plot images with overlaid YOLO labels for inspection and analysis.
 
 ## Installation
 
@@ -39,6 +42,57 @@ plot_and_save_burst(img_bursts, bbox, True, filename='type3b_burst.jpg')
 ```
 
 This will generate an image named `type3b_burst.jpg` in your current directory, showing the synthetic radio burst with its bounding box.
+
+### Configuration Management
+
+Save and load burst generation parameters for reproducible experiments:
+
+```python
+from physynthtrainer.utils import save_config_to_yml, load_config_from_yml
+
+# Save configuration
+save_config_to_yml(
+    freq_range=[30, 85],
+    t_res=0.5,
+    t_start=0.0,
+    N_freq=640,
+    N_time=640,
+    output_file='my_config.yml'
+)
+
+# Load configuration
+config = load_config_from_yml('my_config.yml')
+print(config['freq_range'])  # [30, 85]
+```
+
+### YOLO Label Export
+
+Export bounding box annotations for training object detection models:
+
+```python
+from physynthtrainer.utils import export_yolo_label
+from physynthtrainer.burstGen import generate_many_random_t3_bursts
+
+# Generate multiple bursts
+img_bursts, bursts, is_t3b = generate_many_random_t3_bursts(n_bursts=10)
+
+# Export YOLO labels
+export_yolo_label(bursts, is_t3b, output_dir='labels', base_filename='bursts')
+```
+
+### Visualization with Labels
+
+Plot images with overlaid YOLO labels for inspection:
+
+```python
+from physynthtrainer.utils import plot_jpg_labeling
+
+# Plot image with labels (uses package base.yml for configuration)
+plot_jpg_labeling('burst.jpg', 'burst.txt')
+
+# Or specify a custom configuration file
+plot_jpg_labeling('burst.jpg', 'burst.txt', 'my_config.yml')
+```
 
 ## Contributing
 

@@ -318,7 +318,7 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
 
     return img_bursts_collect, bursts, is_t3b
 
-#img_bursts, bursts, is_t3b = generate_random_bursts(n_bursts=40)
+#img_bursts, bursts, is_t3b = generate_many_random_t3_bursts(n_bursts=40)
 
 
 
