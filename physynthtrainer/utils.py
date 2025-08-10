@@ -73,24 +73,23 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
     img_height, img_width = img_array.shape[:2]
     
     # Create figure
-    plt.figure(figsize=(10, 8))
+    plt.figure()
     
-    # Plot image
-    plt.imshow(img_array, interpolation='nearest', aspect='auto', origin='lower')
-    
-    # Set axis labels and ranges based on config
+    # Get configuration parameters for axis scaling
     freq_range = config.get('freq_range', [30, 85])
     t_res = config.get('t_res', 0.5)
     t_start = config.get('t_start', 0.0)
     N_time = config.get('N_time', 640)
     
-    # Set time axis
+    # Calculate time and frequency ranges
     time_range = [t_start, t_start + N_time * t_res]
-    plt.xlim(time_range)
-    plt.xlabel('Time (s)')
     
-    # Set frequency axis
-    plt.ylim(freq_range)
+    # Plot image with proper extent to match time and frequency axes
+    plt.imshow(img_array, interpolation='nearest', aspect='auto', origin='lower',
+               extent=[time_range[0], time_range[1], freq_range[0], freq_range[1]])
+    
+    # Set axis labels
+    plt.xlabel('Time (s)')
     plt.ylabel('Frequency (MHz)')
     
     # Load and plot labels
@@ -118,19 +117,23 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
             width = float(parts[3])
             height = float(parts[4])
             
-            # Convert normalized coordinates to pixel coordinates
-            x_center_px = x_center * img_width
-            y_center_px = y_center * img_height
-            width_px = width * img_width
-            height_px = height * img_height
+            # Convert normalized YOLO coordinates to time and frequency coordinates
+            # x_center is normalized time position (0-1), convert to actual time
+            time_center = time_range[0] + x_center * (time_range[1] - time_range[0])
+            # y_center is normalized frequency position (0-1), convert to actual frequency
+            freq_center = freq_range[0] + y_center * (freq_range[1] - freq_range[0])
             
-            # Convert to matplotlib rectangle format
-            x_min = x_center_px - width_px / 2
-            y_min = y_center_px - height_px / 2
+            # Convert normalized width and height to actual time and frequency ranges
+            time_width = width * (time_range[1] - time_range[0])
+            freq_height = height * (freq_range[1] - freq_range[0])
             
-            # Create rectangle patch
+            # Calculate rectangle corners in time-frequency coordinates
+            time_min = time_center - time_width / 2
+            freq_min = freq_center - freq_height / 2
+            
+            # Create rectangle patch in time-frequency coordinates
             rect = patches.Rectangle(
-                (x_min, y_min), width_px, height_px,
+                (time_min, freq_min), time_width, freq_height,
                 linewidth=2, edgecolor=colors[class_id % len(colors)],
                 facecolor='none', alpha=0.8
             )
@@ -138,9 +141,9 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
             # Add rectangle to plot
             plt.gca().add_patch(rect)
             
-            # Add class label
+            # Add class label at the center of the bounding box
             class_name = class_names[class_id % len(class_names)]
-            plt.text(x_center_px, y_center_px, class_name, 
+            plt.text(time_center, freq_center, class_name, 
                     color=colors[class_id % len(colors)], 
                     fontsize=10, ha='center', va='center',
                     bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.7))
@@ -152,7 +155,6 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
         return
     
     plt.title(f'Image: {os.path.basename(img_file)} | Labels: {os.path.basename(labeling_txt)}')
-    plt.colorbar(label='Intensity')
     plt.tight_layout()
     plt.show()
 

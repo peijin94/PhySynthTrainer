@@ -32,4 +32,4 @@ Issues = "https://github.com/peijin94/PhySynthTrainer/issues"
 packages = ["physynthtrainer"]
 
 [tool.setuptools.package-data]
-"physynthtrainer" = ["*.yaml", "*.h5", "*.json"]
+"physynthtrainer" = ["*.yaml", "*.h5", "*.json","*.yaml"]
