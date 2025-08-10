@@ -1,0 +1,8 @@
+include physynthtrainer/base.yml
+include physynthtrainer/*.yml
+include physynthtrainer/*.yaml
+include README.md
+include LICENSE
+include paper/paper.md
+include paper/paper.bib
+recursive-include example *.yml *.yaml *.py *.ipynb *.txt

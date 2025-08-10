@@ -1,0 +1,7 @@
+N_freq: 640
+N_time: 640
+freq_range:
+- 30
+- 85
+t_res: 0.5
+t_start: 0.0

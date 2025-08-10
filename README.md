@@ -6,8 +6,8 @@ PhySynthTrainer is a Python library for generating synthetic type III solar radi
 
 ## Features
 
-- **Generate Type III and Type IIIb Bursts:** Create standard type III bursts or type IIIb bursts with fine structures.
-- **Customizable Parameters:** Adjust various parameters such as beam velocity, burst intensity, frequency range, and more.
+- **Generate Type II, Type III and Type IIIb Bursts:** Create type II bursts with multiple harmonic lanes, standard type III bursts, or type IIIb bursts with fine structures.
+- **Customizable Parameters:** Adjust various parameters such as beam velocity, shock velocity, burst intensity, frequency range, and more.
 - **Multiple Density Models:** Supports various solar corona density models including Saito, Leblanc, Parker, and Newkirk.
 - **Bounding Box Generation:** Automatically generates bounding boxes for the bursts, suitable for training object detection models.
 - **Background Noise:** Ability to add background noise to the synthetic data to create more realistic training samples.
@@ -87,11 +87,28 @@ Plot images with overlaid YOLO labels for inspection:
 ```python
 from physynthtrainer.utils import plot_jpg_labeling
 
-# Plot image with labels (uses package base.yml for configuration)
+# Plot image with labels (automatically loads package configuration or uses defaults)
 plot_jpg_labeling('burst.jpg', 'burst.txt')
 
 # Or specify a custom configuration file
 plot_jpg_labeling('burst.jpg', 'burst.txt', 'my_config.yml')
+```
+
+### Mask to Bounding Box Conversion
+
+Convert binary masks to YOLO format bounding boxes:
+
+```python
+from physynthtrainer.utils import mask_to_bbox, mask_to_all_bboxes, visualize_mask_and_bboxes
+
+# Convert mask to single largest bounding box
+bbox = mask_to_bbox(mask, min_area=20)
+
+# Convert mask to all bounding boxes above threshold
+all_bboxes = mask_to_all_bboxes(mask, min_area=20)
+
+# Visualize mask with bounding boxes
+visualize_mask_and_bboxes(mask, all_bboxes, "My Mask")
 ```
 
 ## Contributing
