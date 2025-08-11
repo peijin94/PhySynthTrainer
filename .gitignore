@@ -174,3 +174,7 @@ cython_debug/
 example/*.png
 example/*.jpg
 example/*.txt
+
+
+paper/jats
+paper/paper.pdf

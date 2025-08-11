@@ -30,15 +30,17 @@ Here is a simple example of how to generate a type III radio burst and save it a
 ```python
 import numpy as np
 from physynthtrainer.burstGen import generate_type_iii_burst
-from physynthtrainer.utils import plot_and_save_burst
+from physynthtrainer.utils import paint_arr_to_jpg, visualize_mask_and_bboxes
 
 # Generate a single type III burst
-img_bursts, mask, bbox = generate_type_iii_burst(
-    fine_structure=True
-)
+img_bursts, mask, bbox = generate_type_iii_burst(fine_structure=True)
 
-# Save the burst image with its bounding box
-plot_and_save_burst(img_bursts, bbox, True, filename='type3b_burst.jpg')
+# Save the burst image
+paint_arr_to_jpg(img_bursts, filename='type3b_burst.jpg')
+# export the label file
+label_file = export_yolo_label([bbox],  ['t3b'], output_dir='./',  base_filename='demo_bursts')
+
+plot_jpg_labeling(img_file='type3b_burst.jpg', labeling_txt=label_file)
 ```
 
 This will generate an image named `type3b_burst.jpg` in your current directory, showing the synthetic radio burst with its bounding box.

@@ -129,7 +129,7 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
             lines = f.readlines()
         
         # Define colors for different classes
-        colors = ['red', 'blue', 'green']  # t3, t3b, t2
+        colors = ['white', 'red', 'blue']  # t3, t3b, t2
         class_names = ['t3', 't3b', 't2']
         
         for line in lines:
@@ -252,7 +252,7 @@ def load_config_from_yml(config_file: str = 'burst_config.yml') -> Dict[str, Any
         raise yaml.YAMLError(f"Error parsing YAML file '{config_file}': {e}")
 
 
-def export_yolo_label(bursts: List[List[float]], burst_type: List[bool], 
+def export_yolo_label(bursts: List[List[float]], burst_type: List[Any], 
                      output_dir: str = '.', base_filename: str = 'burst') -> str:
     """Export YOLO format labels for training object detection models.
     
@@ -263,7 +263,11 @@ def export_yolo_label(bursts: List[List[float]], burst_type: List[bool],
     Args:
         bursts (List[List[float]]): List of bounding boxes in YOLO format 
             [x_center, y_center, width, height] for each burst.
-        burst_type (List[bool]): List indicating whether each burst has fine structure (True for t3b, False for t3).
+        burst_type (List[Any]): List indicating the type of each burst. Will be converted to integers:
+            0: t3 (Type III without fine structure)
+            1: t3b (Type III with fine structure) 
+            2: t2 (Type II)
+            Future types can be added by extending the mapping.
         output_dir (str, optional): Directory to save the label file. Defaults to '.'.
         base_filename (str, optional): Base name for the output file. Defaults to 'burst'.
     
@@ -271,8 +275,8 @@ def export_yolo_label(bursts: List[List[float]], burst_type: List[bool],
         str: Path to the created label file.
     
     Note:
-        - Type 0: t3 (Type III without fine structure), 1: t3b (Type III with fine structure)
         - The bounding boxes should already be in normalized YOLO format from the burst generation functions.
+        - The function automatically converts burst types to appropriate class IDs.
     """
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
@@ -282,10 +286,51 @@ def export_yolo_label(bursts: List[List[float]], burst_type: List[bool],
     
     # Open file and write YOLO labels
     with open(label_filename, 'w') as f:
-        for i, (bbox, is_fine_structure) in enumerate(zip(bursts, burst_type)):
-            # Determine class based on burst type
-            # 0: t3 (Type III without fine structure), 1: t3b (Type III with fine structure)
-            class_id = 1 if is_fine_structure else 0
+        for i, (bbox, burst_type_item) in enumerate(zip(bursts, burst_type)):
+            # Convert burst type to class ID
+            # Handle different input types and convert to appropriate class IDs
+            if isinstance(burst_type_item, bool):
+                # Legacy support: True -> t3b (1), False -> t3 (0)
+                class_id = 1 if burst_type_item else 0
+            elif isinstance(burst_type_item, str):
+                # String-based type identification
+                burst_type_str = burst_type_item.lower().strip()
+                if burst_type_str in ['t3', 'type3', 'type_3', 'type iii']:
+                    class_id = 0
+                elif burst_type_str in ['t3b', 'type3b', 'type_3b', 'type iiib']:
+                    class_id = 1
+                elif burst_type_str in ['t2', 'type2', 'type_2', 'type ii']:
+                    class_id = 2
+                else:
+                    # Default to t3 for unknown string types
+                    print(f"Warning: Unknown burst type '{burst_type_item}', defaulting to t3 (class 0)")
+                    class_id = 0
+            elif isinstance(burst_type_item, (int, float)):
+                # Numeric type identification
+                burst_type_num = int(burst_type_item)
+                if burst_type_num == 0:
+                    class_id = 0  # t3
+                elif burst_type_num == 1:
+                    class_id = 1  # t3b
+                elif burst_type_num == 2:
+                    class_id = 2  # t2
+                else:
+                    # For future types, use the number directly
+                    class_id = burst_type_num
+            else:
+                # For any other type, try to convert to string and process
+                try:
+                    burst_type_str = str(burst_type_item).lower().strip()
+                    if 't3b' in burst_type_str or 'iiib' in burst_type_str:
+                        class_id = 1
+                    elif 't2' in burst_type_str or 'ii' in burst_type_str:
+                        class_id = 2
+                    else:
+                        class_id = 0  # Default to t3
+                except:
+                    # Final fallback: default to t3
+                    print(f"Warning: Could not determine class for burst type '{burst_type_item}', defaulting to t3 (class 0)")
+                    class_id = 0
             
             # Extract bounding box coordinates (already in YOLO format)
             x_center, y_center, width, height = bbox
@@ -518,7 +563,7 @@ def visualize_mask_and_bboxes(mask: np.ndarray, bboxes: List[List[float]],
     plt.imshow(mask, cmap='gray', origin='upper')
     
     # Plot bounding boxes
-    colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
+    colors = ['green', 'white' , 'red', 'blue',  'orange', 'purple', 'brown', 'pink', 'gray']
     
     for i, bbox in enumerate(bboxes):
         center_x, center_y, width, height = bbox
