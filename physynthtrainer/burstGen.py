@@ -283,9 +283,9 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
         Burst_intensity = np.clip(Burst_intensity, 0.02, 2.0)
         
         # Generate burststarting_freq and ensure burstending_freq is valid
-        burststarting_freq = np.random.uniform(28, 60)
-        min_ending = burststarting_freq + 4  # minimum ending frequency
-        max_ending = min(88, burststarting_freq + 60)  # maximum ending frequency, capped at 100
+        burststarting_freq = np.random.uniform(freq_range[0], freq_range[1]-30)
+        min_ending = burststarting_freq + 6  # minimum ending frequency
+        max_ending = min(freq_range[1], burststarting_freq + 60)  # maximum ending frequency, capped at 100
         burstending_freq = np.random.uniform(min_ending, max_ending)
         
         edge_freq_ratio = np.random.uniform(0.05, 0.15)

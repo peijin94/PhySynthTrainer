@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def paint_arr_to_jpg(arr, filename='test.jpg', do_norm=True):
+def paint_arr_to_jpg(arr, filename='test.jpg', do_norm=True, flip_y=False):
     """Saves a 2D numpy array as a jpg image.
 
     Args:
@@ -18,6 +18,8 @@ def paint_arr_to_jpg(arr, filename='test.jpg', do_norm=True):
     norm = mcolors.Normalize(vmin=arr.min(), vmax=arr.max())
     cmap = plt.get_cmap('CMRmap') 
     img = cmap(norm(arr.T))
+    if flip_y:
+        img = img[::-1, :, :]
     imgsave = (img * 255).astype(np.uint8)[:,:,0:3]
     im = Image.fromarray(imgsave)
     im.save(filename)
