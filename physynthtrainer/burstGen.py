@@ -268,11 +268,11 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
 
 
         # Using inverse transform sampling: x = (1 - u)^(-1/(alpha-1)) where u is uniform random
-        alpha = 2  # power law exponent, higher value means stronger events are rarer
+        alpha = 1.5  # power law exponent, higher value means stronger events are rarer
         u = np.random.uniform(0, 1)
         Burst_intensity = 0.1 + 0.9 * ((1 - u) ** (-1/(alpha-1)))
         # Clip to ensure we stay in [0.1, 1] range
-        Burst_intensity = np.clip(Burst_intensity, 0.02, 2.0)
+        Burst_intensity = np.clip(Burst_intensity, 0.01, 2.0)
         
         # Generate burststarting_freq and ensure burstending_freq is valid
         burststarting_freq = np.random.uniform(freq_range[0], freq_range[1]-30)
