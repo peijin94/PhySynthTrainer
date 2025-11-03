@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "physynthtrainer"
-version = "0.1.0"
+version = "1.0.0"
 description = "Physics-informed synthetic data training for event detection in solar radio bursts"
 readme = "README.md"
 authors = [{ name = "Peijin Zhang", email = "pz47@njit.edu" }]
@@ -32,4 +32,4 @@ Issues = "https://github.com/peijin94/PhySynthTrainer/issues"
 packages = ["physynthtrainer"]
 
 [tool.setuptools.package-data]
-"physynthtrainer" = ["*.yaml", "*.h5", "*.json"]
+"physynthtrainer" = ["*.yml", "*.yaml", "*.h5", "*.json"]

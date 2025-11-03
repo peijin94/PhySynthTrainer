@@ -202,25 +202,17 @@ def generate_type_iii_burst(freq_range=[30, 85], t_res=0.5, t_start=0.0, N_freq=
         img_bursts = img_bursts * 0.0
     img_bursts *= Burst_intensity
 
-    # make mask and bbox for training perposes
-    mask = img_bursts > 0.1*np.max(img_bursts)
-    x_indices, y_indices = np.where(mask)
-
-    if len(y_indices) > 0 and len(x_indices) > 0:
-        # Get absolute coordinates
-        xmin = np.min(x_indices)
-        ymin = np.min(y_indices)
-        xmax = np.max(x_indices)
-        ymax = np.max(y_indices)
+    # make mask and bbox for training purposes using the mask_to_bbox function
+    mask = img_bursts > 0.03*np.max(img_bursts)
+    
+    # Use the mask_to_bbox function to get the largest connected component
+    from .utils import mask_to_all_bboxes, mask_to_allpix_bbox
+    bboxes = mask_to_allpix_bbox(mask, min_area=20)  # Minimum area threshold for type III bursts
+    
+    if bboxes:
+        ## Take the largest connected component (first one after sorting by area)
+        bbox = bboxes[0]
         
-        # Convert to YOLO format (normalized center x, center y, width, height)
-        img_height, img_width = mask.shape
-        x_center = ((xmin + xmax) / 2) / img_width
-        y_center = ((ymin + ymax) / 2) / img_height
-        width = (xmax - xmin) / img_width
-        height = (ymax - ymin) / img_height
-        
-        bbox = [x_center, y_center, width, height]
     else:
         bbox = [0.5, 0.5, 1.0, 1.0]  # default to full image if no mask found
 
@@ -318,10 +310,105 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
 
     return img_bursts_collect, bursts, is_t3b
 
-#img_bursts, bursts, is_t3b = generate_random_bursts(n_bursts=40)
+#img_bursts, bursts, is_t3b = generate_many_random_t3_bursts(n_bursts=40)
 
 
-
+def generate_type_2_burst(freq_range=[30, 85], t_res=0.5, t_start=0.0, N_freq=640, N_time=640,
+                         v_shock=700, t_s_start=80.0, t_s_end=180.0, eff_starting_freq=100,
+                         t0_R_start=0, laneNUM=6, harmonic_overlap=False):
+    """Generate a type II radio burst with multiple harmonic lanes.
+    
+    Args:
+        freq_range (list, optional): [min_freq, max_freq] in MHz. Defaults to [30, 85].
+        t_res (float, optional): Time resolution in seconds. Defaults to 0.5.
+        t_start (float, optional): Start time in seconds. Defaults to 0.0.
+        N_freq (int, optional): Number of frequency channels. Defaults to 640.
+        N_time (int, optional): Number of time steps. Defaults to 640.
+        v_shock (float, optional): Shock velocity in km/s. Defaults to 700.
+        t_s_start (float, optional): Shock start time in seconds. Defaults to 80.0.
+        t_s_end (float, optional): Shock end time in seconds. Defaults to 180.0.
+        eff_starting_freq (float, optional): Effective starting frequency in MHz. Defaults to 100.
+        t0_R_start (float, optional): Time offset for radius calculation in seconds. Defaults to 0.
+        laneNUM (int, optional): Number of harmonic lanes. Defaults to 6.
+        harmonic_overlap (bool, optional): Whether to include second harmonic. Defaults to False.
+    
+    Returns:
+        tuple: (img_bursts, mask, bbox) - The generated burst image, mask, and bounding box
+    """
+    # Initialize arrays
+    img_bursts = np.zeros((N_time, N_freq))
+    t_ax = t_start + np.arange(0, N_time) * t_res
+    f_ax = np.linspace(freq_range[0], freq_range[1], N_freq)
+    
+    # Find time indices for shock start and end
+    t_s_start_idx = np.argmin(np.abs(t_ax - t_s_start))
+    t_s_end_idx = np.argmin(np.abs(t_ax - t_s_end))
+    
+    # Calculate radius and frequency evolution
+    R_start = freqDrift.freq_to_R(eff_starting_freq * 1e6)
+    R_all_t = R_start + v_shock * 1e3 * (t_ax + t0_R_start) / 2.99792458e8
+    f_all_t = freqDrift.R_to_freq(R_all_t)
+    
+    # Fixed bandwidth ratio
+    bandw = 0.1  # ratio of df/f
+    bandw_freq_depend = bandw * (f_all_t / 1e6) ** 1
+    
+    # Random parameters for lanes
+    smooth_edge = np.random.uniform(2, 10)
+    f_ratio_upper_lim = np.random.uniform(1.2, 1.8)
+    f_ratio_lane = np.random.uniform(1.0, f_ratio_upper_lim, laneNUM)
+    f_ratio_lane[0] = 1.0  # First lane is fundamental
+    bandw_radio = np.random.uniform(0.05, 0.8, laneNUM)
+    amp_lane = np.random.uniform(0.3, 1.0, laneNUM)
+    
+    # Generate each harmonic lane
+    for lane_idx in range(laneNUM):
+        # Generate amplitude modulation in time
+        amp_tx = generate_quasi_periodic_signal(
+            t_arr=t_ax, base_freq=0.05, num_harmonics=5, 
+            noise_level=0, freqvar=0.1
+        )
+        # Normalize to 0.1-1
+        amp_tx = 0.1 + (amp_tx - np.min(amp_tx)) / (np.max(amp_tx) - np.min(amp_tx)) * 0.9
+        # Apply smooth edges
+        amp_tx = np.tanh((t_ax - t_s_start) / smooth_edge) * np.tanh((t_s_end - t_ax) / smooth_edge) * amp_tx
+        
+        # Scale by lane amplitude
+        amp_tx = amp_tx * amp_lane[lane_idx]
+        
+        # Add lane to image
+        for t_idx_event, this_t in enumerate(range(t_s_start_idx, t_s_end_idx)):
+            f_this = f_all_t[this_t] / 1e6
+            
+            # Add fundamental frequency lane
+            img_bursts[this_t, :] += amp_tx[this_t] * np.exp(
+                -(f_ax - f_this * f_ratio_lane[lane_idx]) ** 2 / 
+                (2 * bandw_radio[lane_idx] * (bandw_freq_depend[t_idx_event] / 2) ** 2)
+            )
+            
+            # Add second harmonic if requested
+            if harmonic_overlap:
+                img_bursts[this_t, :] += amp_tx[this_t] * np.exp(
+                    -(f_ax - f_this * f_ratio_lane[lane_idx] * 2) ** 2 / 
+                    (2 * bandw_radio[lane_idx] * (bandw_freq_depend[t_idx_event] / 2) ** 2)
+                )
+    
+    # Create mask and bounding box using the mask_to_bbox function
+    threshold = np.max(img_bursts) * 0.03
+    mask = img_bursts > threshold
+    
+    # Use the mask_to_bbox function to get the largest connected component
+    from .utils import mask_to_all_bboxes, mask_to_bbox
+    bboxes = mask_to_all_bboxes(mask, min_area=30)  # Minimum area threshold for type II bursts
+    
+    if bboxes:
+        # Take the largest connected component (first one after sorting by area)
+        bbox = bboxes
+    else:
+        # Default bbox if no mask or no components meet the area threshold
+        bbox = [0.5, 0.5, 0.1, 0.1]
+    
+    return img_bursts, mask, bbox
 
 
 def added_noise(t_ax, f_ax, noise_level=0.2, noise_size=[32,8]):

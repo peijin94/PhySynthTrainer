@@ -1,0 +1,11 @@
+# Base configuration file for PhySynthTrainer burst generation
+# This file contains the standard parameters used for generating synthetic solar radio bursts
+
+# Frequency configuration
+freq_range: [30, 85]  # MHz - frequency range for the radio observations
+t_res: 0.5            # seconds - time resolution per pixel
+t_start: 0.0          # seconds - start time for the observation
+
+# Image dimensions
+N_freq: 640           # number of frequency channels
+N_time: 640           # number of time steps
