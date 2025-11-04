@@ -142,7 +142,7 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
             lines = f.readlines()
         
         # Define colors for different classes
-        colors = ['white', 'red', 'blue']  # t3, t3b, t2
+        colors = ['white', 'red', 'yellow']  # t3, t3b, t2
         class_names = ['t3', 't3b', 't2']
         
         for line in lines:
@@ -178,7 +178,7 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
             # Create rectangle patch in time-frequency coordinates
             rect = patches.Rectangle(
                 (time_min, freq_min), time_width, freq_height,
-                linewidth=2, edgecolor=colors[class_id % len(colors)],
+                linewidth=1.3, edgecolor=colors[class_id % len(colors)],
                 facecolor='none', alpha=0.8
             )
             
@@ -190,7 +190,7 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
             plt.text(time_center, freq_center, class_name, 
                     color=colors[class_id % len(colors)], 
                     fontsize=10, ha='center', va='center',
-                    bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.7))
+                    bbox=dict(boxstyle="round,pad=0.3", facecolor='black', alpha=0.55))
         
         print(f"Plotted {len(lines)} labels from {labeling_txt}")
         
@@ -198,10 +198,10 @@ def plot_jpg_labeling(img_file: str, labeling_txt: str, config: Union[str, Dict[
         print(f"Error reading label file: {e}")
         return
     
-    plt.title(f'Image: {os.path.basename(img_file)} | Labels: {os.path.basename(labeling_txt)}')
+    #plt.title(f'Image: {os.path.basename(img_file)} | Labels: {os.path.basename(labeling_txt)}')
     plt.tight_layout()
-    plt.show()
-
+    
+    return plt.gcf()
 
 def save_config_to_yml(freq_range: List[float], t_res: float, t_start: float, 
                        N_freq: int, N_time: int, output_file: str = 'burst_config.yml') -> str:

@@ -31,7 +31,7 @@ os.makedirs(dir_labels, exist_ok=True)
 os.makedirs(dir_images, exist_ok=True)
 
 
-totalset = 10
+totalset = 20000
 
 
 t_burst_hash, f_ax, v_ax = create_radio_burst_hash_table(
