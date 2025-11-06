@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from tqdm import tqdm
 from physynthtrainer.burstGen import (
     generate_quasi_periodic_signal, 
     biGaussian, 
@@ -23,15 +24,15 @@ import gc, os
 
 gc.collect()
 
-dir_labels = '/data07/peijinz/ML/type3MLgen/dataset_v2/labels/'
-dir_images = '/data07/peijinz/ML/type3MLgen/dataset_v2/images/'
+dir_labels = '/data07/peijinz/ML/type3MLgen/dataset_v3/labels/'
+dir_images = '/data07/peijinz/ML/type3MLgen/dataset_v3/images/'
 
 # create directories if not exist
 os.makedirs(dir_labels, exist_ok=True)
 os.makedirs(dir_images, exist_ok=True)
 
 
-totalset = 20000
+totalset = 50000
 
 
 t_burst_hash, f_ax, v_ax = create_radio_burst_hash_table(
@@ -44,7 +45,7 @@ t_burst_hash, f_ax, v_ax = create_radio_burst_hash_table(
 bgfile = '/data07/peijinz/ML/type3MLgen/PhySynthTrainer/physynthtrainer/data/latest_data.3.npz'
 bgdata = np.load(bgfile)
 
-for i in range(totalset):
+for i in tqdm(range(totalset)):
 
     fname = f'b{i:05d}'
 
