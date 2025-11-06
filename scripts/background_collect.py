@@ -28,7 +28,7 @@ def process_fits_file(fits_path):
             
             # Remove singleton dimensions and compute median along time axis
             data_2d = data[0, 0, :, :]  # Shape: (731, n_time)
-            median_spectrum = np.median(data_2d, axis=1)  # Shape: (731,)
+            median_spectrum = np.nanmedian(data_2d, axis=1)  # Shape: (731,)
             
             return (Path(fits_path).name, median_spectrum)
     except Exception as e:
@@ -78,7 +78,7 @@ def main():
     print(f"Final array shape: {median_spectra.shape}")
     
     # Save to NPZ file
-    output_path = Path("/home/peijin/PhySynthTrainer/scripts/background_2024.npz")
+    output_path = Path("./background_2024.npz")
     np.savez(
         output_path,
         background=median_spectra,
