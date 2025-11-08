@@ -108,7 +108,9 @@ def generate_type_iii_burst(freq_range=[30, 85], t_res=0.5, t_start=0.0, N_freq=
                            v_beam=0.15, t0_burst=80.0, decay_t_dur_100Mhz=1.0,
                            Burst_intensity=1.0, burststarting_freq=40.0,
                            burstending_freq=60.0, edge_freq_ratio=0.01,
-                           fine_structure=True, use_hash_table=False, hash_table=None, v_hash=None):
+                           fine_structure=True, 
+                           fine_structure_base_freq=0.5,
+                           use_hash_table=False, hash_table=None, v_hash=None):
     """Generate a Type III solar radio burst image.
 
     Args:
@@ -159,7 +161,7 @@ def generate_type_iii_burst(freq_range=[30, 85], t_res=0.5, t_start=0.0, N_freq=
     # Generate fine structure if requested
     if fine_structure:
         freq_modulation = generate_quasi_periodic_signal(
-            t_arr=f_ax, base_freq=0.5, num_harmonics=5,
+            t_arr=f_ax, base_freq=fine_structure_base_freq, num_harmonics=5,
             noise_level=0, freqvar=0.1
         )
         # normalize to 0-1
@@ -203,7 +205,7 @@ def generate_type_iii_burst(freq_range=[30, 85], t_res=0.5, t_start=0.0, N_freq=
     img_bursts *= Burst_intensity
 
     # make mask and bbox for training purposes using the mask_to_bbox function
-    mask = img_bursts > 0.03*np.max(img_bursts)
+    mask = img_bursts > np.min( [0.05*np.max(img_bursts), 1])
     
     # Use the mask_to_bbox function to get the largest connected component
     from .utils import mask_to_all_bboxes, mask_to_allpix_bbox
@@ -231,7 +233,11 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
                          N_time: int = 640,
                          use_hash_table: bool = False,
                          hash_table: np.ndarray = None,
-                         v_hash: np.ndarray = None) -> List[Tuple]:
+                         v_hash: np.ndarray = None,                         
+                         flux_max: float = 1500,
+                         flux_min: float = 0.2,
+                         alpha: float = 1.8 # powerlaw
+                         ) -> List[Tuple]:
     """Generate multiple Type III radio bursts with random parameters.
 
     Args:
@@ -253,25 +259,30 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
             Defaults to None.
         v_hash (np.ndarray, optional): The velocity hash to use for burst generation. 
             Defaults to None.
-
+        normalization_factor (float, optional): The normalization factor to use for the burst image. 
+            Defaults to 1.0.
+        label_low_intensity_threshold (float, optional): The threshold for the low intensity label. 
+            Defaults to 0.2.
     Returns:
         List[Tuple]: A list of tuples containing the generated bursts, their bounding boxes, and whether they are type 3b bursts
     """
     bursts = []
     is_t3b = []
+    peak_value = []
     img_bursts_collect = np.zeros((N_time, N_freq))
+
+
     for _ in range(n_bursts):
         # Generate random parameters within specified ranges
         v_beam = np.random.uniform(0.08, 0.4)
-        t0_burst = np.random.uniform(-80, 320)
-        decay_t_dur_100Mhz = np.random.uniform(0.4, 1.5)
+        t0_burst = np.random.uniform(-70, 280)
+        decay_t_dur_100Mhz = np.random.uniform(0.6, 2.4)
 
 
         # Using inverse transform sampling: x = (1 - u)^(-1/(alpha-1)) where u is uniform random
-        alpha = 1.7  # power law exponent, higher value means stronger events are rarer
         u = np.random.uniform(0, 1)
-        Burst_intensity = (0.1 + 0.9 * ((1 - u) ** (-1/(alpha-1)))) / 50 +0.02
-        # Clip to ensure we stay in [0.1, 1] range
+        #x = ((x_max_solution**(1 - alpha) - x_min**(1 - alpha)) * u + x_min**(1 - alpha)) ** (1 / (1 - alpha))
+        Burst_intensity = ((flux_max**(1 - alpha) - flux_min**(1 - alpha)) * u + flux_min**(1 - alpha)) ** (1 / (1 - alpha))
         
         # Generate burststarting_freq and ensure burstending_freq is valid
         burststarting_freq = np.random.uniform(freq_range[0], freq_range[1]-30)
@@ -279,9 +290,9 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
         max_ending = min(freq_range[1], burststarting_freq + 60)  # maximum ending frequency, capped at 100
         burstending_freq = np.random.uniform(min_ending, max_ending)
         
-        edge_freq_ratio = np.random.uniform(0.05, 0.15)
-        fine_structure = np.random.random() < 0.3   # Randomly True or False
-        
+        edge_freq_ratio = np.random.uniform(0.03, 0.15)
+        fine_structure = np.random.random() < 0.45   # Randomly True or False
+        fine_structure_base_freq = np.random.uniform(0.3, 1)
         # Generate burst with random parameters
         img_bursts, mask, bbox = generate_type_iii_burst(
             freq_range=freq_range,
@@ -299,15 +310,17 @@ def generate_many_random_t3_bursts(n_bursts: int = 100,
             fine_structure=fine_structure,
             use_hash_table=use_hash_table,
             hash_table=hash_table,
-            v_hash=v_hash
+            v_hash=v_hash,
+            fine_structure_base_freq=fine_structure_base_freq
         )
         
-        if np.max(img_bursts) > 0.001:    
+        if np.max(img_bursts) > 0.001:
             img_bursts_collect += img_bursts
             bursts.append((bbox))
             is_t3b.append(fine_structure)
+            peak_value.append(np.max(img_bursts))
 
-    return img_bursts_collect, bursts, is_t3b
+    return img_bursts_collect, bursts, is_t3b, peak_value
 
 #img_bursts, bursts, is_t3b = generate_many_random_t3_bursts(n_bursts=40)
 
