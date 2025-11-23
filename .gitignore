@@ -9,6 +9,8 @@ example/runs/
 *.so
 *.jpg
 
+inspect_train/
+
 # Distribution / packaging
 .Python
 build/
